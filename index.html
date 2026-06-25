@@ -97,9 +97,9 @@
     </div>
 
     <div class="hands">
-      <button onclick="play('グー')">グー</button>
-      <button onclick="play('チョキ')">チョキ</button>
-      <button onclick="play('パー')">パー</button>
+<button id="rock" onclick="play('グー')">グー</button>
+<button id="scissors" onclick="play('チョキ')">チョキ</button>
+<button id="paper" onclick="play('パー')">パー</button>
     </div>
 
     <div class="status" id="status">
@@ -137,6 +137,9 @@ const hands = ["グー", "チョキ", "パー"];
 
 function play(playerHand) {
   rounds++;
+if (rounds > 100) {
+  return;
+}
 
   let yoshikiHand = decideYoshikiHand();
   let result = judge(playerHand, yoshikiHand);
@@ -238,7 +241,7 @@ function play(playerHand) {
     line = `お前、よしきに負けすぎやん。\nしゃーない。今回だけ教えたる。\n\n<span class="hint">ヒント：よしきは次に「${hikariHint}」を出しそうだ。</span>`;
   }
 
-  if (winStreak >= 3 && winStreak < 7 && hikaruSupportHand === null) {
+  if (winStreak >= 3 && winStreak < 5 && hikaruSupportHand === null) {
     hikaruJoined = true;
     speaker = "ヒカル";
     hikaruSupportHand = random(hands);
@@ -304,24 +307,44 @@ function play(playerHand) {
 佳紀「そんなもんならんでええって」`;
   }
 
-  if (winStreak === 7 && !kissEventDone) {
+if (winStreak === 5 && !kissEventDone) {
     kissEventDone = true;
+    hikariHint = null;
+    hikaruSupportHand = null;
     speaker = "佳紀";
     line =
-`……七回も勝つんや。
+`そっちの５回連続勝ちや。
 
-すごいな。
+すごいな。……えぇ、と、じゃあ。
 
 （佳紀が少し迷ってから、そっと近づいてくる）
 
-……約束やから。目ぇ、閉じて。
+約束やから。恥ずいけど。
 
 （チュッ♡と頬へのキスをもらった）
 （佳紀は恥ずかしそうに俯いている）
 
-光&ヒカル「はァ！？　何なん今の！？？」`;
+光「はァ！？　何なん今の！？？」
+ヒカル「おれには！？？　応援しとったおれは！？」
+佳紀「ふ、二人は関係ないやん……」
+`;
   }
+if (rounds === 100 && !kissEventDone) {
+  speaker = "佳紀";
+  line =
+`……百回もやったんやな。
 
+こんなにじゃんけんしたん、
+初めてや。
+
+……ありがとな。
+
+今日は、ここまでにしよ。`;
+
+  document.getElementById("rock").disabled = true;
+  document.getElementById("scissors").disabled = true;
+  document.getElementById("paper").disabled = true;
+}
   lastYoshikiHand = yoshikiHand;
 
   show(speaker, `あなた：${playerHand}\n佳紀：${yoshikiHand}\n\n${line}`);
