@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>よしきとじゃんけん</title>
+<style>
+  body {
+    margin: 0;
+    font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: #f3efe8;
+    color: #333;
+  }
+
+  .game {
+    max-width: 680px;
+    margin: 24px auto;
+    padding: 18px;
+  }
+
+  .card {
+    background: #fffaf4;
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 28px;
+    margin-bottom: 18px;
+  }
+
+  .screen {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 20px;
+    min-height: 210px;
+    border: 2px solid #e6d8c8;
+  }
+
+  .speaker {
+    font-weight: bold;
+    color: #6b4f3f;
+    margin-bottom: 10px;
+  }
+
+  .dialogue {
+    font-size: 19px;
+    line-height: 1.8;
+    white-space: pre-line;
+  }
+
+  .hands {
+    text-align: center;
+    margin-top: 22px;
+  }
+
+  button {
+    font-size: 18px;
+    padding: 13px 22px;
+    margin: 6px;
+    border: none;
+    border-radius: 14px;
+    background: #7aa6c8;
+    color: white;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background: #5d91bb;
+  }
+
+  .status {
+    margin-top: 18px;
+    font-size: 14px;
+    color: #666;
+    line-height: 1.7;
+    text-align: center;
+  }
+
+  .hint {
+    color: #b76b35;
+    font-weight: bold;
+  }
+</style>
+</head>
+
+<body>
+<div class="game">
+  <div class="card">
+    <h1>よしきとじゃんけん</h1>
+
+    <div class="screen">
+      <div class="speaker" id="speaker">佳紀</div>
+      <div class="dialogue" id="dialogue">……じゃんけん、するん？</div>
+    </div>
+
+    <div class="hands">
+      <button onclick="play('グー')">グー</button>
+      <button onclick="play('チョキ')">チョキ</button>
+      <button onclick="play('パー')">パー</button>
+    </div>
+
+    <div class="status" id="status">
+      勝ち：0　負け：0　あいこ：0<br>
+      連勝：0　連敗：0　遊んだ回数：0
+    </div>
+  </div>
+</div>
+
+<script>
+let wins = 0;
+let losses = 0;
+let draws = 0;
+let rounds = 0;
+
+let winStreak = 0;
+let loseStreak = 0;
+let drawStreak = 0;
+
+let lastYoshikiHand = null;
+let lastYoshikiResult = null;
+
+let hikariHint = null;
+let hikaruSupportHand = null;
+
+let hikariJoined = false;
+let hikaruJoined = false;
+let kissEventDone = false;
+
+const hands = ["グー", "チョキ", "パー"];
+
+function play(playerHand) {
+  rounds++;
+
+  let yoshikiHand = decideYoshikiHand();
+  let result = judge(playerHand, yoshikiHand);
+
+  let speaker = "佳紀";
+  let line = "";
+
+  if (result === "win") {
+    wins++;
+    winStreak++;
+    loseStreak = 0;
+    drawStreak = 0;
+    lastYoshikiResult = "lose";
+
+    line = random([
+      "……負けた。\nもう一回。",
+      "なんでそんな強いん。",
+      "……次は勝つし。",
+      "……納得いかん。",
+      "……今の、なし。",
+      "……もう一回やろ。",
+      "……次は負けやん。"
+    ]);
+  }
+
+  if (result === "lose") {
+    losses++;
+    loseStreak++;
+    winStreak = 0;
+    drawStreak = 0;
+    lastYoshikiResult = "win";
+
+    line = random([
+      "勝ちや。",
+      "あ……勝てた。",
+      "俺の勝ちやな。……珍しい。",
+      "……なんか今日、調子ええかも。",
+      "……もう一回する？",
+      "……次も勝てるかな。"
+    ]);
+  }
+
+  if (result === "draw") {
+    draws++;
+    drawStreak++;
+    winStreak = 0;
+    loseStreak = 0;
+    lastYoshikiResult = "draw";
+
+    line = random([
+      "……あいこや。",
+      "なんで同じなん。",
+      "気ぃ合うな。",
+      "もう一回やろ。"
+    ]);
+  }
+
+  if (hikariHint !== null) {
+    if (hikariHint === yoshikiHand) {
+      speaker = "光";
+      line = `ほらな。よしき、次は${hikariHint}出すと思ったわ。\n\n佳紀「……なんで分かるん。」`;
+    } else {
+      speaker = "光";
+      line = `ごめんな。外した。\n\n佳紀「何で光が謝るん。」`;
+    }
+    hikariHint = null;
+  }
+
+  if (hikaruSupportHand !== null) {
+    if (result === "win") {
+      speaker = "ヒカル";
+      line = `なんでや！！\nおれがよしきに${hikaruSupportHand}出せばええよって言うたのに！！\n\n佳紀「……ごめん。」`;
+    } else if (result === "lose") {
+      speaker = "ヒカル";
+      line = `よしきの勝ちや！\nえらいで、かわええなぁ。\n\n佳紀「なんで上から目線なんや。」`;
+    } else {
+      speaker = "ヒカル";
+      line = `あいこかぁ。\nでもよしき、がんばっとるで。\n\n佳紀「はいはい、ありがとな。」`;
+    }
+    hikaruSupportHand = null;
+  }
+
+  if (loseStreak >= 3 && hikariHint === null) {
+    hikariJoined = true;
+    speaker = "光";
+    hikariHint = predictYoshikiHand();
+    line = `お前、よしきに負けすぎやん。\nしゃーない。今回だけ教えたる。\n\n<span class="hint">ヒント：よしきは次に「${hikariHint}」を出しそうだ。</span>`;
+  }
+
+  if (winStreak >= 3 && winStreak < 7 && hikaruSupportHand === null) {
+    hikaruJoined = true;
+    speaker = "ヒカル";
+    hikaruSupportHand = random(hands);
+    line = `よしきばっか負けとる……。\n次はおれが応援したる。\n\nヒカル「よしき、${hikaruSupportHand}出せばええよ。」`;
+  }
+
+  if (winStreak === 7 && !kissEventDone) {
+    kissEventDone = true;
+    speaker = "佳紀";
+    line =
+`……七回も勝つんや。
+
+……すごいな。
+
+（佳紀が少し迷ってから、そっと近づいてくる）
+
+……目ぇ、閉じて。
+
+チュッ♡
+
+光「はァ！？」
+
+ヒカル「よしき、あとでおれともやろ♡」`;
+  }
+
+  if (drawStreak >= 3) {
+    speaker = "佳紀";
+    line = `……なんでこんな合うん。\n\nヒカル「仲良しやなぁ。」\n光「いや、張り合っとるだけやろ。」`;
+  }
+
+  if (rounds === 10) {
+    speaker = "佳紀";
+    line = "……もう十回もやっとる。\n別に、楽しいとかやないけど。\n……もう一回だけ。";
+  }
+
+  if (rounds === 20) {
+    speaker = "佳紀";
+    line = "まだやるん？\n……ええけど。\nお前とやるんは、嫌やないし。";
+  }
+
+  lastYoshikiHand = yoshikiHand;
+
+  show(speaker, `あなた：${playerHand}\n佳紀：${yoshikiHand}\n\n${line}`);
+  updateStatus();
+}
+
+function decideYoshikiHand() {
+  if (hikaruSupportHand !== null) {
+    return hikaruSupportHand;
+  }
+
+  if (lastYoshikiResult === "lose" && lastYoshikiHand !== null) {
+    if (Math.random() < 0.65) {
+      return lastYoshikiHand;
+    }
+  }
+
+  if (lastYoshikiResult === "win" && lastYoshikiHand !== null) {
+    if (Math.random() < 0.55) {
+      return random(hands.filter(hand => hand !== lastYoshikiHand));
+    }
+  }
+
+  if (lastYoshikiResult === "draw") {
+    if (Math.random() < 0.5) {
+      return "チョキ";
+    }
+  }
+
+  return random(hands);
+}
+
+function predictYoshikiHand() {
+  if (lastYoshikiResult === "lose" && lastYoshikiHand !== null) {
+    return lastYoshikiHand;
+  }
+
+  if (lastYoshikiResult === "win" && lastYoshikiHand !== null) {
+    let candidates = hands.filter(hand => hand !== lastYoshikiHand);
+    return random(candidates);
+  }
+
+  if (lastYoshikiResult === "draw") {
+    return "チョキ";
+  }
+
+  return random(hands);
+}
+
+function judge(player, yoshiki) {
+  if (player === yoshiki) return "draw";
+
+  if (
+    (player === "グー" && yoshiki === "チョキ") ||
+    (player === "チョキ" && yoshiki === "パー") ||
+    (player === "パー" && yoshiki === "グー")
+  ) {
+    return "win";
+  }
+
+  return "lose";
+}
+
+function random(array) {
+  return array[Math.floor(Math.random() * array.length)];
+}
+
+function show(speaker, text) {
+  document.getElementById("speaker").textContent = speaker;
+  document.getElementById("dialogue").innerHTML = text;
+}
+
+function updateStatus() {
+  document.getElementById("status").innerHTML =
+    `勝ち：${wins}　負け：${losses}　あいこ：${draws}<br>
+     連勝：${winStreak}　連敗：${loseStreak}　遊んだ回数：${rounds}`;
+}
+</script>
+</body>
+</html>
