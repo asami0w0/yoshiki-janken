@@ -93,7 +93,7 @@
 
     <div class="screen">
       <div class="speaker" id="speaker">佳紀</div>
-      <div class="dialogue" id="dialogue">……じゃんけん、するん？</div>
+      <div class="dialogue" id="dialogue">じゃんけん、するん？</div>
     </div>
 
     <div class="hands">
@@ -129,6 +129,10 @@ let hikariJoined = false;
 let hikaruJoined = false;
 let kissEventDone = false;
 
+let hint30Done = false;
+let hint50Done = false;
+let hint70Done = false;
+
 const hands = ["グー", "チョキ", "パー"];
 
 function play(playerHand) {
@@ -148,11 +152,11 @@ function play(playerHand) {
     lastYoshikiResult = "lose";
 
     line = random([
-      "……負けた。\nもう一回。",
+      "あー……負けた。\nもう一回。",
       "なんでそんな強いん。",
-      "……次は勝つし。",
-      "……納得いかん。",
-      "……今の、なし。",
+      "負けとる……。",
+      "納得いかん、もう一回や。",
+      "んー、ダメやったか。",
       "……もう一回やろ。",
       "……次は負けやん。"
     ]);
@@ -168,8 +172,8 @@ function play(playerHand) {
     line = random([
       "勝ちや。",
       "あ……勝てた。",
-      "俺の勝ちやな。……珍しい。",
-      "……なんか今日、調子ええかも。",
+      "俺の勝ちやな。",
+      "なんか今日、調子ええかも。",
       "……もう一回する？",
       "……次も勝てるかな。"
     ]);
@@ -184,7 +188,7 @@ function play(playerHand) {
 
     line = random([
       "……あいこや。",
-      "なんで同じなん。",
+      "同じやったな。",
       "気ぃ合うな。",
       "もう一回やろ。"
     ]);
@@ -193,7 +197,7 @@ function play(playerHand) {
   if (hikariHint !== null) {
     if (hikariHint === yoshikiHand) {
       speaker = "光";
-      line = `ほらな。よしき、次は${hikariHint}出すと思ったわ。\n\n佳紀「……なんで分かるん。」`;
+      line = `ほらな。よしき、次は${hikariHint}出すと思ったわ。\n\n佳紀「ええ…何で分かったん？」`;
     } else {
       speaker = "光";
       line = `ごめんな。外した。\n\n佳紀「何で光が謝るん。」`;
@@ -204,13 +208,25 @@ function play(playerHand) {
   if (hikaruSupportHand !== null) {
     if (result === "win") {
       speaker = "ヒカル";
-      line = `なんでや！！\nおれがよしきに${hikaruSupportHand}出せばええよって言うたのに！！\n\n佳紀「……ごめん。」`;
+      line = random([
+        `なんでや！！\nおれが応援したのに！！\n\n佳紀「……ごめん。」`,
+        `あかんかったかぁ……。\nでもよしき、次はいけるで。\n\n佳紀「次は負けやん。」`,
+        `今のは惜しかったなぁ。\n\n佳紀「せやな。次は勝てるかも」`
+      ]);
     } else if (result === "lose") {
       speaker = "ヒカル";
-      line = `よしきの勝ちや！\nえらいで、かわええなぁ。\n\n佳紀「なんで上から目線なんや。」`;
+      line = random([
+        `よしきの勝ちや！\nえらいで、かわええなぁ。\n\n佳紀「なんで上から目線なん。」`,
+        `ほら、よしき勝てたやろ？\n\n佳紀「うん、ヒカルのおかげや」`,
+        `よしき、ちゃんと勝ったなぁ。\nかわええ。\n\n佳紀「わっ、そんなくっつかんといて。」`
+      ]);
     } else {
       speaker = "ヒカル";
-      line = `あいこかぁ。\nでもよしき、がんばっとるで。\n\n佳紀「はいはい、ありがとな。」`;
+      line = random([
+        `あいこかぁ。\nでもよしき、がんばっとるで。\n\n佳紀「はいはい、ありがとな。」`,
+        `引き分けやなぁ。\n次は勝てるで、よしき。\n\n佳紀「……うん。」`,
+        `よしき、次や次。\n\n佳紀「分かっとる。」`
+      ]);
     }
     hikaruSupportHand = null;
   }
@@ -226,7 +242,66 @@ function play(playerHand) {
     hikaruJoined = true;
     speaker = "ヒカル";
     hikaruSupportHand = random(hands);
-    line = `よしきばっか負けとる……。\n次はおれが応援したる。\n\nヒカル「よしき、${hikaruSupportHand}出せばええよ。」`;
+    line = random([
+      `よしきばっか負けとる……。\n\n（ヒカルが佳紀に何か耳打ちした。）\n\nヒカル「次は頑張ってな！」`,
+      `よしき、ちょっとこっち来て。\n\n（ヒカルが佳紀にこそこそ耳打ちした。）\n\nヒカル「大丈夫やで。次は勝てる！」`,
+      `おれはよしきの味方やからな。\n\n（ヒカルが佳紀に何か耳打ちした。）\n\n佳紀「……分かった。」`,
+      `よしき、負けすぎやん。\n\n（ヒカルが佳紀に何か耳打ちした。）\n\nヒカル「次はよしきが勝つ！」`
+    ]);
+  }
+
+  if (drawStreak >= 3) {
+    speaker = "佳紀";
+    line = `……なんでこんなに何度も合うん。\n\nヒカル「仲良しやなぁ。」\n光「いや、張り合っとるだけやろ。」`;
+  }
+
+  if (rounds === 10) {
+    speaker = "佳紀";
+    line = "……もう十回もやっとるけど。\n疲れとらん？\n……俺はまだええよ。";
+  }
+
+  if (rounds === 20) {
+    speaker = "佳紀";
+    line = "まだやるん？\n……ええけど。\nお前とやるんは、嫌やないし。";
+  }
+
+  if (rounds >= 30 && !hint30Done && !kissEventDone) {
+    hint30Done = true;
+    speaker = "光";
+    line =
+`お前も気づいたやろ。
+
+よしき、負けると意地になって
+同じ手ぇ出しがちなんよ。分かりやす〜
+
+佳紀「黙っててくれへんかなぁ！」`;
+  }
+
+  if (rounds >= 50 && !hint50Done && !kissEventDone) {
+    hint50Done = true;
+    speaker = "ヒカル";
+    line =
+`よしき、
+勝ったあと、同じ手はあんまり出さんよな。
+
+嬉しくなると、ちょっと変えたくなるんや。
+
+佳紀「今それ言わんでええやろ。」`;
+  }
+
+  if (rounds >= 70 && !hint70Done && !kissEventDone) {
+    hint70Done = true;
+    speaker = "光";
+    line =
+`光「あと、あいこの後な？」
+
+ヒカル「よしき、なんかチョキ多いんよなぁ。」
+
+佳紀「……うっ」
+
+光「これでお前も、よしきマスターやな！」
+
+佳紀「そんなもんならんでええって」`;
   }
 
   if (winStreak === 7 && !kissEventDone) {
@@ -235,32 +310,16 @@ function play(playerHand) {
     line =
 `……七回も勝つんや。
 
-……すごいな。
+すごいな。
 
 （佳紀が少し迷ってから、そっと近づいてくる）
 
-……目ぇ、閉じて。
+……約束やから。目ぇ、閉じて。
 
-チュッ♡
+（チュッ♡と頬へのキスをもらった）
+（佳紀は恥ずかしそうに俯いている）
 
-光「はァ！？」
-
-ヒカル「よしき、あとでおれともやろ♡」`;
-  }
-
-  if (drawStreak >= 3) {
-    speaker = "佳紀";
-    line = `……なんでこんな合うん。\n\nヒカル「仲良しやなぁ。」\n光「いや、張り合っとるだけやろ。」`;
-  }
-
-  if (rounds === 10) {
-    speaker = "佳紀";
-    line = "……もう十回もやっとる。\n別に、楽しいとかやないけど。\n……もう一回だけ。";
-  }
-
-  if (rounds === 20) {
-    speaker = "佳紀";
-    line = "まだやるん？\n……ええけど。\nお前とやるんは、嫌やないし。";
+光&ヒカル「はァ！？　何なん今の！？？」`;
   }
 
   lastYoshikiHand = yoshikiHand;
